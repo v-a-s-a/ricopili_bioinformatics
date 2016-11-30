@@ -18,7 +18,14 @@ class MakeSnpLocationFile(Job):
         self.daner_file = daner_file
 
     def run(self, fileStore):
-        pass
+        with fileStore.writeGlobalFileStream() as (snp_loc_conn, snp_loc_file):
+
+            with open(self.daner_file) as daner_conn:
+                for line in daner_conn:
+                    line = line.strip().split()
+                    snp_loc_conn.write('\t'.join((line[1], line[0], line[2])) + '\n')
+
+            fileStore.logToMaster("Creating SNP Location file at: {}".format(snp_loc_file))
 
 
 class AnnotateSummaryStats(Job):
@@ -36,7 +43,7 @@ class AnnotateSummaryStats(Job):
         Job.__init__(self, memory="100M", cores=1, disk="100M")
 
     def run(self, fileStore):
-        pass
+        fileStore.logToMaster("Annotating summary statistics with gene membership.")
 
 
 class TestGeneSets(Job):
@@ -57,7 +64,7 @@ class TestGeneSets(Job):
         self.chromosome = chromosome
 
     def run(self, fileStore):
-        pass
+        fileStore.logToMaster("Testing genes on chromosome {}".format(self.chromosome))
 
 
 class MergeTestSets(Job):
@@ -71,7 +78,7 @@ class MergeTestSets(Job):
         Job.__init__(self, memory="100M", cores=1, disk="100M")
 
     def run(self, fileStore):
-        pass
+        fileStore.logToMaster("Merging test sets.")
 
 
 def run_magma_pipeline(toil_options):
@@ -80,17 +87,16 @@ def run_magma_pipeline(toil_options):
     """
 
     # define jobs
-    make_snp_location_file_job = MakeSnpLocationFile(daner_file="")
+    make_snp_location_file_job = MakeSnpLocationFile(daner_file="/Users/vasya/Projects/ripkelab/ricopili/ricopili_bioinfomatics/test/resources/pgc_scz_chr22_subset.daner")
     annotate_summary_stats_job = AnnotateSummaryStats()
-    test_gene_sets_jobs = [TestGeneSets(chromosome) for chromosome in range(1, 23)]
+    test_gene_sets_jobs = [TestGeneSets(chromosome) for chromosome in range(22, 23)]
     merge_gene_sets_job = MergeTestSets()
 
     # specify dependencies
     make_snp_location_file_job.addChild(annotate_summary_stats_job)
     for job in test_gene_sets_jobs:
         annotate_summary_stats_job.addChild(job)
-    make_snp_location_file_job = make_snp_location_file_job.encapsulate()
-    make_snp_location_file_job.addChild(merge_gene_sets_job)
+    annotate_summary_stats_job.addFollowOn(merge_gene_sets_job)
 
     # execute workflow
     Job.Runner.startToil(make_snp_location_file_job, toil_options)
@@ -98,5 +104,6 @@ def run_magma_pipeline(toil_options):
 
 if __name__ == "__main__":
     toil_options = Job.Runner.getDefaultOptions('./test_file_store')
-    toil_options.clean = 'always'
+    toil_options.clean = 'never'
+    toil_options.logLevel = 'INFO'
     run_magma_pipeline(toil_options)
