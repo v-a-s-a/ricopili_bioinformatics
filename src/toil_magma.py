@@ -76,12 +76,14 @@ class TestGeneSets(Job):
                 --gene-settings snp-min-maf=0.05
                 --out "${results_prefix}"
     """
-    def __init__(self, chromosome, magma_bin, sample_size, annotated_file, daner_file):
+    def __init__(self, chromosome, magma_bin, sample_size, annotated_file, daner_file, reference_data):
         Job.__init__(self, memory="100M", cores=1, disk="100M")
         self.chromosome = chromosome
         self.magma_bin = magma_bin
         self.sample_size = sample_size
         self.annotated_file = annotated_file
+        self.daner_file = daner_file
+        self.reference_data = reference_data
 
     def run(self, fileStore):
         fileStore.logToMaster("Testing genes on chromosome {}".format(self.chromosome))
@@ -89,7 +91,7 @@ class TestGeneSets(Job):
         results_prefix = fileStore.getLocalTempFile()
 
         cmd = [self.magma_bin,
-               "--bfile", "/Users/vasya/Projects/ripkelab/ricopili/ricopili_bioinfomatics/resources/magma_macOS/reference_data/NCBI37.3.gene.loc",
+               "--bfile", self.reference_data,
                "--batch", self.chromosome,
                "--pval", self.daner_file,
                "N={}".format(self.sample_size),
