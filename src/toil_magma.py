@@ -92,6 +92,7 @@ class TestGeneSets(Job):
                 --gene-settings snp-min-maf=0.05
                 --out "${results_prefix}"
     """
+
     def __init__(self, chromosome, magma_bin, sample_size, annotated_file, daner_file, reference_data):
         Job.__init__(self, memory="100M", cores=1, disk="100M")
         self.chromosome = chromosome
@@ -109,8 +110,10 @@ class TestGeneSets(Job):
                                                                 chrm=self.chromosome)
         local_out = "{prefix}.batch{chrm}_chr.genes.out".format(prefix=results_prefix,
                                                                 chrm=self.chromosome)
-        local_log = "{prefix}.batch{chrm}_chr.genes.".format(prefix=results_prefix,
-                                                             chrm=self.chromosome)
+        local_log = "{prefix}.batch{chrm}_chr.log".format(prefix=results_prefix,
+                                                          chrm=self.chromosome)
+
+        fileStore.logToMaster("Writing batch log to: {}".format(local_log))
 
         cmd = [self.magma_bin,
                "--bfile", self.reference_data,
@@ -141,6 +144,7 @@ class MergeTestSets(Job):
     Example Command:
     ${magma_bin} --merge ${results_prefix} --out ${results_prefix}
     """
+
     def __init__(self, magma_bin, batch_results):
         Job.__init__(self, memory="100M", cores=1, disk="100M")
         self.magma_bin = magma_bin
@@ -152,25 +156,25 @@ class MergeTestSets(Job):
 
         # copy down inputs and store outputs locally
         local_dir = fileStore.getLocalTempDir()
-        local_raw = "{dir}magma.batch{batch}_chr.raw"
-        local_out = "{dir}magma.batch{batch}_chr.out"
-        local_log = "{dir}magma.batch{batch}_chr.log"
+        for batch in self.batch_results:
+            local_raw = "{dir}/magma.batch{batch}_chr.genes.raw".format(dir=local_dir, batch=batch['chrm'])
+            local_out = "{dir}/magma.batch{batch}_chr.genes.out".format(dir=local_dir, batch=batch['chrm'])
+            local_log = "{dir}/magma.batch{batch}_chr.log".format(dir=local_dir, batch=batch['chrm'])
 
-        # copy down gene test files for merging
-        for result in self.batch_resultsbatch_results:
-            fileStore.readGlobalFile(local_raw.format(dir=local_dir, batch=result['chrm']))
-            fileStore.readGlobalFile(local_out.format(dir=local_dir, batch=result['chrm']))
-            fileStore.readGlobalFile(local_log.format(dir=local_dir, batch=result['chrm']))
+            # copy/link down gene test files for merging
+            fileStore.readGlobalFile(batch['raw_file_id'], userPath=local_raw)
+            fileStore.readGlobalFile(batch['out_file_id'], userPath=local_out)
+            fileStore.readGlobalFile(batch['log_file_id'], userPath=local_log)
 
         cmd = [self.magma_bin,
-               "--merge", local_dir + "magma",
-               "--out", local_dir + "merge"]
+               "--merge", local_dir + "/magma",
+               "--out", local_dir + "/merge"]
 
         sp.call(cmd)
 
-        global_merged_raw = fileStore.writeGlobalFile(local_dir + "merge.genes.raw")
-        global_merged_out = fileStore.writeGlobalFile(local_dir + "merge.genes.out")
-        global_merged_log = fileStore.writeGlobalFile(local_log + "merge.log")
+        global_merged_raw = fileStore.writeGlobalFile(local_dir + "/merge.genes.raw")
+        global_merged_out = fileStore.writeGlobalFile(local_dir + "/merge.genes.out")
+        global_merged_log = fileStore.writeGlobalFile(local_dir + "/merge.log")
 
         return {"raw_file_id": global_merged_raw,
                 "out_file_id": global_merged_out,
@@ -182,21 +186,22 @@ def run_magma_pipeline(toil_options):
     Initial target: MAGMA analysis using summary statistics
     """
 
-    MAGMA_BINARY = "/Users/vasya/Projects/ripkelab/ricopili/ricopili_bioinfomatics/resources/magma_macOS/magma"
-    REF_1000G = "/Users/vasya/Projects/ripkelab/ricopili/magma_reference_data/g1000_eur"
-    REF_GENE_LOC = "/Users/vasya/Projects/ripkelab/ricopili/ricopili_bioinfomatics/resources/magma_macOS/reference_data/NCBI37.3.gene.loc"
-    DANER_FILE = "/Users/vasya/Projects/ripkelab/ricopili/ricopili_bioinfomatics/test/resources/pgc_scz_chr22_subset.daner"
+    BROAD_GIT_ROOT = "/home/unix/vassily/projects/pgc/ricopili_extension/ricopili_bioinformatics/"
+    MAGMA_BINARY = BROAD_GIT_ROOT + "resources/magma_linux/magma"
+    REF_1000G = "/psych/ripke/share/vasa/magma_ref/g1000_eur"
+    REF_GENE_LOC = BROAD_GIT_ROOT + "resources/magma_macOS/reference_data/NCBI37.3.gene.loc"
+    DANER_FILE = BROAD_GIT_ROOT + "test/resources/pgc_scz_chr22_subset.daner"
     SAMPLE_SIZE = "2000"
 
     # define jobs
-    make_snp_location_file_job = MakeSnpLocationFile(daner_file="/Users/vasya/Projects/ripkelab/ricopili/ricopili_bioinfomatics/test/resources/pgc_scz_chr22_subset.daner")
+    make_snp_location_file_job = MakeSnpLocationFile(daner_file=DANER_FILE)
     annotate_summary_stats_job = AnnotateSummaryStats(magma_bin=MAGMA_BINARY,
                                                       snp_loc_file=make_snp_location_file_job.rv(),
                                                       gene_loc_ref=REF_GENE_LOC)
     test_gene_sets_jobs = [TestGeneSets(chromosome=str(chrm),
                                         magma_bin=MAGMA_BINARY,
                                         sample_size=SAMPLE_SIZE,
-                                        annotated_file=make_snp_location_file_job.rv(),
+                                        annotated_file=annotate_summary_stats_job.rv(),
                                         daner_file=DANER_FILE,
                                         reference_data=REF_1000G) for chrm in range(22, 23)]
     merge_gene_sets_job = MergeTestSets(magma_bin=MAGMA_BINARY, batch_results=[x.rv() for x in test_gene_sets_jobs])
@@ -213,9 +218,9 @@ def run_magma_pipeline(toil_options):
 
 if __name__ == "__main__":
     toil_options = Job.Runner.getDefaultOptions('./test_file_store')
-    # toil_options.clean = 'always'
+    toil_options.clean = 'always'
     toil_options.clean = 'never'
     toil_options.cleanWorkDir = 'never'
-    toil_options.workDir = '/Users/vasya/Projects/ripkelab/ricopili/ricopili_bioinfomatics/src/toil_temp/'
+    toil_options.workDir = '/home/unix/vassily/projects/pgc/ricopili_extension/toil_testing/toil_temp/'
     toil_options.logLevel = 'INFO'
     run_magma_pipeline(toil_options)
