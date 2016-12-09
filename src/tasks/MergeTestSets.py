@@ -2,6 +2,8 @@
 
 from toil.job import Job
 import subprocess as sp
+import os
+
 
 class MergeTestSets(Job):
     """
@@ -11,11 +13,12 @@ class MergeTestSets(Job):
     ${magma_bin} --merge ${results_prefix} --out ${results_prefix}
     """
 
-    def __init__(self, magma_bin, batch_results):
+    def __init__(self, magma_bin, batch_results, output_dir):
         Job.__init__(self, memory="100M", cores=1, disk="100M")
         self.magma_bin = magma_bin
         # list of dicts containing file IDs from all gene tests
         self.batch_results = batch_results
+        self.output_dir = output_dir
 
     def run(self, fileStore):
         fileStore.logToMaster("Merging test sets.")
@@ -42,8 +45,12 @@ class MergeTestSets(Job):
         global_merged_out = fileStore.writeGlobalFile(local_dir + "/merge.genes.out")
         global_merged_log = fileStore.writeGlobalFile(local_dir + "/merge.log")
 
-        return {"raw_file_id": global_merged_raw,
-                "out_file_id": global_merged_out,
-                "log_file_id": global_merged_log}
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)
 
-
+        fileStore.readGlobalFile(global_merged_raw,
+                                 userPath=os.path.join(self.output_dir, 'magma.genes.raw'))
+        fileStore.readGlobalFile(global_merged_out,
+                                 userPath=os.path.join(self.output_dir, 'magma.genes.out'))
+        fileStore.readGlobalFile(global_merged_log,
+                                 userPath=os.path.join(self.output_dir, 'magma.log'))

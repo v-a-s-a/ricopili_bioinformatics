@@ -12,7 +12,7 @@ from tasks.MergeTestSets import MergeTestSets
 import argparse
 
 
-def run_magma_pipeline(toil_options, sample_size, daner_file):
+def run_magma_pipeline(toil_options, sample_size, daner_file, output_dir):
     """
     Initial target: MAGMA analysis using summary statistics
     """
@@ -34,7 +34,8 @@ def run_magma_pipeline(toil_options, sample_size, daner_file):
                                         daner_file=daner_file,
                                         reference_data=REF_1000G) for chrm in range(22, 23)]
     merge_gene_sets_job = MergeTestSets(magma_bin=MAGMA_BINARY,
-                                        batch_results=[x.rv() for x in test_gene_sets_jobs])
+                                        batch_results=[x.rv() for x in test_gene_sets_jobs],
+                                        output_dir=output_dir)
 
     # specify dependencies among jobs
     make_snp_location_file_job.addChild(annotate_summary_stats_job)
@@ -62,8 +63,8 @@ if __name__ == "__main__":
     parser.add_argument("--sample-size",
                         action="store",
                         dest="sample_size",
-                        help="""The sample size of the study in which the summary statistics
-                        were generated.""")
+                        help="""The sample size of the study in which the
+                        summary statisticswere generated.""")
     parser.add_argument("--backend",
                         action="store",
                         dest="backend",
@@ -73,6 +74,11 @@ if __name__ == "__main__":
                         will be executed locally. The 'gridEngine' option means
                         that jobs will be submitted to a cluster running SGE/OGE/UGE
                         (such as the Broad's UGER).""")
+    parser.add_argument("--output-dir",
+                        action="store",
+                        dest="output_dir",
+                        help="""The directory to output .raw, .out and .log files
+                        from the MAGMA analysis.""")
     args = parser.parse_args()
 
     toil_options = Job.Runner.getDefaultOptions(args.file_store)
@@ -81,4 +87,5 @@ if __name__ == "__main__":
 
     run_magma_pipeline(toil_options,
                        sample_size=args.sample_size,
-                       daner_file=args.daner_file)
+                       daner_file=args.daner_file,
+                       output_dir=args.output_dir)
