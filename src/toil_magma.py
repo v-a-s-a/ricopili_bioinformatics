@@ -83,7 +83,7 @@ if __name__ == "__main__":
 
     toil_options = Job.Runner.getDefaultOptions(args.file_store)
     toil_options.clean = 'always'
-    toil_options.logLevel = 'OFF'
+    toil_options.logLevel = 'INFO'
 
     run_magma_pipeline(toil_options,
                        sample_size=args.sample_size,

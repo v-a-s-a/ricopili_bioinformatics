@@ -3,6 +3,7 @@
 from toil.job import Job
 import subprocess as sp
 import os
+import shutil
 
 
 class MergeTestSets(Job):
@@ -48,9 +49,6 @@ class MergeTestSets(Job):
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
 
-        fileStore.readGlobalFile(global_merged_raw,
-                                 userPath=os.path.join(self.output_dir, 'magma.genes.raw'))
-        fileStore.readGlobalFile(global_merged_out,
-                                 userPath=os.path.join(self.output_dir, 'magma.genes.out'))
-        fileStore.readGlobalFile(global_merged_log,
-                                 userPath=os.path.join(self.output_dir, 'magma.log'))
+        shutil.copyfile(fileStore.readGlobalFile(global_merged_raw), os.path.join(self.output_dir, 'magma.genes.raw'))
+        shutil.copyfile(fileStore.readGlobalFile(global_merged_out), os.path.join(self.output_dir, 'magma.genes.out'))
+        shutil.copyfile(fileStore.readGlobalFile(global_merged_log), os.path.join(self.output_dir, 'magma.log'))
