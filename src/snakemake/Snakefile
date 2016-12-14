@@ -1,0 +1,27 @@
+configfile: "config.yaml"
+
+rule make_snp_location_file:
+	input:
+		config["daner"]	
+	output:
+		config["output_dir"] + "snp.loc"
+	run:
+		with open(output[0], 'w') as outfile:
+			with open(input[0]) as infile:
+				for line in infile:
+					line = line.strip().split()
+					outfile.write('\t'.join((line[1], line[0], line[2])) + '\n')
+
+rule annotate_summary_stats:
+	input:
+		config["output_dir"] + "snp.loc"
+	output:
+		config["output_dir"] + "summary.annot"
+	log:
+		config["output_dir"] + "{output}.log"
+		config["output_dir"] + "{output}.stdout.log"
+	shell:
+		"({config[magma_bin]}  --annotate "
+               	" --snp-loc {input} "
+                " --gene-loc {config[ref_gene_loc]} "
+                " --out {output}) >2"
