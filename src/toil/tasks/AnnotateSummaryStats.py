@@ -15,8 +15,9 @@ class AnnotateSummaryStats(Job):
                 --gene-loc "magma_v1.05b_static/reference_data/NCBI37.3.gene.loc"
                 --out ${annotation_file}
     """
+
     def __init__(self, snp_loc_file, magma_bin, gene_loc_ref):
-        Job.__init__(self, memory="100M", cores=1, disk="100M")
+        Job.__init__(self, memory="1G", cores=1, disk="100M")
         self.snp_loc_file = snp_loc_file
         self.magma_bin = magma_bin
         self.gene_loc_ref = gene_loc_ref
@@ -41,4 +42,3 @@ class AnnotateSummaryStats(Job):
 
         # push the annotated file into the global file store
         return global_annot
-
