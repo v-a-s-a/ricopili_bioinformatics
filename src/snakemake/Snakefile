@@ -1,27 +1,65 @@
 configfile: "config.yaml"
+#AUTOSOMES = [str(x) for x in range(1,23)]
+AUTOSOMES = ["22"]
+
+rule all:
+    input:
+        config["output_dir"] + "summary.genes.annot"
 
 rule make_snp_location_file:
-	input:
-		config["daner"]	
-	output:
-		config["output_dir"] + "snp.loc"
-	run:
-		with open(output[0], 'w') as outfile:
-			with open(input[0]) as infile:
-				for line in infile:
-					line = line.strip().split()
-					outfile.write('\t'.join((line[1], line[0], line[2])) + '\n')
+    input:
+        config["daner"]
+    output:
+        config["output_dir"] + "snp.loc"
+    run:
+        with open(output[0], 'w') as outfile:
+            with open(input[0]) as infile:
+                for line in infile:
+                    line = line.strip().split()
+                    outfile.write('\t'.join((line[1], line[0], line[2])) + '\n')
 
 rule annotate_summary_stats:
-	input:
-		config["output_dir"] + "snp.loc"
-	output:
-		config["output_dir"] + "summary.annot"
-	log:
-		config["output_dir"] + "{output}.log"
-		config["output_dir"] + "{output}.stdout.log"
-	shell:
-		"({config[magma_bin]}  --annotate "
-               	" --snp-loc {input} "
-                " --gene-loc {config[ref_gene_loc]} "
-                " --out {output}) >2"
+    input:
+        config["output_dir"] + "snp.loc"
+    output:
+        config["output_dir"] + "summary.genes.annot",
+        log = config["output_dir"] + "summary.log"
+    log:
+        config["output_dir"] + "summary.annot.genes.stderr"
+    params:
+        output_prefix = config["output_dir"] + "summary"
+    shell:
+        "({config[magma_bin]}  --annotate "
+        " --snp-loc {input} "
+        " --gene-loc {config[ref_gene_loc]} "
+        " --out {params.output_prefix}) 2> {log}"
+
+rule test_gene_sets:
+    input:
+        config["output_dir"] + "summary.genes.annot"
+    output:
+        out = config["output_dir"] + "gene_results.batch{chrom}_chr.genes.out",
+        raw = config["output_dir"] + "gene_results.batch{chrom}_chr.genes.raw",
+    log:
+        log = config["output_dir"] + "gene_results.batch{chrom}_chr.log",
+    params:
+        batch_prefix = config["output_dir"] + "gene_results"
+    shell:
+        "{config[magma_bin]} --bfile {config[ref_1000g]} "
+        " --batch {wildcards.chrom} chr "
+        " --pval {config[daner]} "
+        " N={config[study_sample_size]} "
+        " --gene-annot {input} "
+        " --out {params.batch_prefix} "
+
+rule merge_test_sets:
+    input:
+        expand(config["output_dir"] + "gene_results.batch{chrom}_chr.genes.raw", chrom=AUTOSOMES)
+    output:
+        config["output_dir"] + "merged_results.genes.out"
+    params:
+        batch_prefix = config["output_dir"] + "gene_results",
+        output_prefix = config["output_dir"] + "merged_results"
+    shell:
+        "{config[magma_bin]} --merge {params.batch_prefix} "
+        " --out {params.output_prefix} "

@@ -3,4 +3,4 @@ output_dir: /home/unix/vassily/projects/pgc/ricopili_extension/ricopili_bioinfor
 magma_bin: /home/unix/vassily/projects/pgc/ricopili_extension/ricopili_bioinformatics/resources/magma_linux/magma
 ref_gene_loc: /home/unix/vassily/projects/pgc/ricopili_extension/ricopili_bioinformatics/resources/magma_macOS/reference_data/NCBI37.3.gene.loc
 ref_1000g: /psych/ripke/share/vasa/magma_ref/g1000_eur
-
+study_sample_size: 20000
