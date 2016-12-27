@@ -9,6 +9,6 @@ setup(name='ricopili_bioinformatics',
       author_email='',
       license='MIT',
       packages=find_packages(),
-      install_requires=['requests'],
+      install_requires=['snakemake'],
       scripts=['src/snakemake/postimputation'],
       zip_safe=False)
