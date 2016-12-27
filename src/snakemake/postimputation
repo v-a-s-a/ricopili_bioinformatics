@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+"""
+A prototype for the ricopili post-imputation pipeline. Uses MAGMA as an
+example tool.
+"""
+
+from snakemake import snakemake
+import argparse as arg
+import sys
+import os
+
+
+def eat_logs(log_dict):
+    """
+    Eat the snakemake print-to-commandline logs.
+    """
+    pass
+
+
+def __main__():
+
+    repo_root = os.path.dirname(os.path.abspath(__file__)).strip("src/snakemake/")
+
+    # parse command line arguments
+    parser = arg.ArgumentParser()
+    parser.add_argument("--cluster", action="store", dest="cluster")
+    parser.add_argument("--daner", action="store", dest="daner")
+    parser.add_argument("--cores", action="store", dest="cores", default=1)
+    parser.add_argument("--ref-1000g", action="store", dest="ref_1000g",
+                        default=os.path.join(repo_root, "/resources/magma_linux/magma"))
+    parser.add_argument("--ref-gene-loc", action="store", dest="ref_gene_loc",
+                        default=os.path.join(repo_root,
+                                             "/resoureces/magma_linux/"
+                                             "reference_data/NCBI37.3.gene.loc"))
+    args = parser.parse_args()
+
+    for param, val in vars(args).items():
+        print("{0}: {1}".format(param, val))
+
+    # execute MAGMA workflow
+    success = snakemake(
+        snakefile=os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "Snakefile"),
+        snakemakepath="",
+        log_handler=eat_logs,
+        config=vars(args),  # TODO: make less hacky. The potential for collisions is high
+        cluster_config=os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "/broad_uger_config.yaml"),
+        drmaa=" -l h_vmem={cluster.h_vmem} ")
+
+    # check status
+    if success:
+        sys.exit(0)
+    else:
+        print("Postimputation execution failed.")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    __main__()
