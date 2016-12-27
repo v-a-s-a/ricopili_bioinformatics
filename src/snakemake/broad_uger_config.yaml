@@ -1,0 +1,5 @@
+__default__:
+    h_vmem: 1g
+
+merge_test_sets:
+    h_vmem: 10g
