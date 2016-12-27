@@ -26,6 +26,7 @@ def __main__():
     parser.add_argument("--cluster", action="store", dest="cluster")
     parser.add_argument("--daner", action="store", dest="daner")
     parser.add_argument("--cores", action="store", dest="cores", default=1)
+    parser.add_argument("--output-dir", action="store", dest="output_dir", default=1)
     parser.add_argument("--ref-1000g", action="store", dest="ref_1000g",
                         default=os.path.join(repo_root, "/resources/magma_linux/magma"))
     parser.add_argument("--ref-gene-loc", action="store", dest="ref_gene_loc",
