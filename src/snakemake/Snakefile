@@ -1,10 +1,9 @@
-configfile: "config.yaml"
-#AUTOSOMES = [str(x) for x in range(1,23)]
-AUTOSOMES = ["22"]
+configfile: "scz_full_config.yaml"
+AUTOSOMES = [str(x) for x in range(1,3)]
 
 rule all:
     input:
-        config["output_dir"] + "summary.genes.annot"
+        config["output_dir"] + "merged_results.genes.out"
 
 rule make_snp_location_file:
     input:
@@ -12,11 +11,16 @@ rule make_snp_location_file:
     output:
         config["output_dir"] + "snp.loc"
     run:
+        import gzip as gz
+        if input[0].endswith('.gz'):
+            infile = gz.open(input[0], 'rt')
+        else:
+            infile = open(input[0], 'r')
         with open(output[0], 'w') as outfile:
-            with open(input[0]) as infile:
-                for line in infile:
-                    line = line.strip().split()
-                    outfile.write('\t'.join((line[1], line[0], line[2])) + '\n')
+            for line in infile:
+                line = line.strip().split()
+                outfile.write('\t'.join((line[1], line[0], line[2])) + '\n')
+            infile.close()
 
 rule annotate_summary_stats:
     input:
