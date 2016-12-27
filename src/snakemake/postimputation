@@ -9,6 +9,8 @@ import argparse as arg
 import sys
 import os
 
+from pkg_resources import Requirement, resource_filename
+
 
 def eat_logs(log_dict):
     """
@@ -19,7 +21,7 @@ def eat_logs(log_dict):
 
 def __main__():
 
-    repo_root = os.path.dirname(os.path.abspath(__file__)).strip("src/snakemake/")
+    # repo_root = os.path.dirname(os.path.abspath(__file__)).strip("src/snakemake/")
 
     # parse command line arguments
     parser = arg.ArgumentParser()
@@ -28,11 +30,11 @@ def __main__():
     parser.add_argument("--cores", action="store", dest="cores", default=1)
     parser.add_argument("--output-dir", action="store", dest="output_dir", default=1)
     parser.add_argument("--ref-1000g", action="store", dest="ref_1000g",
-                        default=os.path.join(repo_root, "/resources/magma_linux/magma"))
+                        required=True)
     parser.add_argument("--ref-gene-loc", action="store", dest="ref_gene_loc",
-                        default=os.path.join(repo_root,
-                                             "/resoureces/magma_linux/"
-                                             "reference_data/NCBI37.3.gene.loc"))
+                        default=resource_filename(
+                            Requirement.parse(
+                                "ricopili_bioinformatics"), "gene_loc_ref"))
     args = parser.parse_args()
 
     for param, val in vars(args).items():
@@ -40,14 +42,15 @@ def __main__():
 
     # execute MAGMA workflow
     success = snakemake(
-        snakefile=os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "Snakefile"),
+        snakefile=resource_filename(
+            Requirement.parse(
+                "ricopili_bioinformatics"), "snakefile"),
         snakemakepath="",
         log_handler=eat_logs,
         config=vars(args),  # TODO: make less hacky. The potential for collisions is high
-        cluster_config=os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "/broad_uger_config.yaml"),
+        cluster_config=resource_filename(
+                            Requirement.parse(
+                                "ricopili_bioinformatics"), "cluster_config"),
         drmaa=" -l h_vmem={cluster.h_vmem} ")
 
     # check status
