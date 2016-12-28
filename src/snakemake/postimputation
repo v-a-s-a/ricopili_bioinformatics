@@ -49,7 +49,7 @@ def __main__():
         config=vars(args),  # TODO: make less hacky. The potential for collisions is high
         cluster_config=resource_filename(
                             Requirement.parse(
-                                "ricopili_bioinformatics"), "src/snakemake/broad_uger_config.yaml"),
+                                "src"), "snakemake/broad_uger_config.yaml"),
         drmaa=" -l h_vmem={cluster.h_vmem} ")
 
     # check status
