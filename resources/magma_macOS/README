@@ -1,9 +1,0 @@
-This archive contains the MAGMA source code and makefile. 
-If you have a C++ compiler and the 'make' utility installed on your system, you can compile the program by unzipping the archive, moving to the folder containing the makefile, and running the 'make' command.
-If you are using a compiler other than g++, you will first need to change the CXX field at the top of the makefile to the program name of your compiler.
-
-Once compiled, MAGMA is a self-contained executable and does not need to be otherwise installed. If the magma file is placed in a directory that is included in the PATH variable, it can be called from anywhere by simply entering 'magma' followed by the desired arguments at the command line. 
-Otherwise, the path to the file must be added (eg. './magma' if it is in the current directory.
-
-Documentation and auxiliary files can be found on the MAGMA site at http://ctglab.nl/software/magma
-For questions, error reports, suggestions for improvements and feature requests, please email c.a.de.leeuw@vu.nl
