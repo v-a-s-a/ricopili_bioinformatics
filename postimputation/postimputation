@@ -33,7 +33,7 @@ def __main__():
     parser.add_argument("--ref-gene-loc", action="store", dest="ref_gene_loc",
                         default=resource_filename(
                             Requirement.parse(
-                                "ricopili_bioinformatics"), "resources/magma_linux/reference_data/NCBI37.3.gene.loc"))
+                                "ricopili_magma"), "resources/magma_linux/reference_data/NCBI37.3.gene.loc"))
     args = parser.parse_args()
 
     for param, val in vars(args).items():
@@ -43,13 +43,13 @@ def __main__():
     success = snakemake(
         snakefile=resource_filename(
             Requirement.parse(
-                "ricopili_bioinformatics"), "src/snakemake/Snakefile"),
+                "ricopili_magma"), "Snakefile"),
         snakemakepath="",
         log_handler=eat_logs,
         config=vars(args),  # TODO: make less hacky. The potential for collisions is high
         cluster_config=resource_filename(
                             Requirement.parse(
-                                "src"), "snakemake/broad_uger_config.yaml"),
+                                "ricopili_magma"), "broad_uger_config.yaml"),
         drmaa=" -l h_vmem={cluster.h_vmem} ")
 
     # check status
