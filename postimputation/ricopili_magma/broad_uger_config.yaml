@@ -1,5 +1,8 @@
 __default__:
-    h_vmem: 1g
+  h_vmem: 1g
+
+test_gene_sets:
+  h_vmem: 5g
 
 merge_test_sets:
-    h_vmem: 10g
+  h_vmem: 10g

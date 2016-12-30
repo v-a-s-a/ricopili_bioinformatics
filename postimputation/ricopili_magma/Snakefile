@@ -1,5 +1,4 @@
-# configfile: "scz_full_config.yaml"
-AUTOSOMES = [str(x) for x in range(1,3)]
+AUTOSOMES = [str(x) for x in range(1, 3)]
 
 rule all:
     input:
@@ -10,17 +9,9 @@ rule make_snp_location_file:
         config["daner"]
     output:
         config["output_dir"] + "snp.loc"
-    run:
-        import gzip as gz
-        if input[0].endswith('.gz'):
-            infile = gz.open(input[0], 'rt')
-        else:
-            infile = open(input[0], 'r')
-        with open(output[0], 'w') as outfile:
-            for line in infile:
-                line = line.strip().split()
-                outfile.write('\t'.join((line[1], line[0], line[2])) + '\n')
-            infile.close()
+    shell:
+        "cat {input} | awk '{{print $2, $1, $3}}'  > {output}"
+
 
 rule annotate_summary_stats:
     input:

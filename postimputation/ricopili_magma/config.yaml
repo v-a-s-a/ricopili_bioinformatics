@@ -1,6 +1,6 @@
-daner: /home/unix/vassily/projects/pgc/ricopili_extension/ricopili_bioinformatics/test/resources/pgc_scz_chr22_subset.daner
-output_dir: /home/unix/vassily/projects/pgc/ricopili_extension/ricopili_bioinformatics/test/data/
-magma_bin: /home/unix/vassily/projects/pgc/ricopili_extension/ricopili_bioinformatics/resources/magma_linux/magma
-ref_gene_loc: /home/unix/vassily/projects/pgc/ricopili_extension/ricopili_bioinformatics/resources/magma_macOS/reference_data/NCBI37.3.gene.loc
+daner: /psych/genetics_data/ripke/vasa/ricopili_testing/scz_full_no-duplicates.daner
+output_dir: /psych/genetics_data/ripke/vasa/ricopili_testing/scz_output/
+magma_bin: /home/unix/vassily/projects/pgc/ricopili_extension/ricopili_bioinformatics/postimputation/ricopili_magma/resources/magma_linux/magma
+ref_gene_loc: /home/unix/vassily/projects/pgc/ricopili_extension/ricopili_bioinformatics/postimputation/ricopili_magma/resources/magma_linux/reference_data/NCBI37.3.gene.loc
 ref_1000g: /psych/ripke/share/vasa/magma_ref/g1000_eur
 study_sample_size: 20000

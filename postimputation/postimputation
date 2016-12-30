@@ -8,7 +8,7 @@ from snakemake import snakemake
 import argparse as arg
 import sys
 
-from pkg_resources import Requirement, resource_filename
+from pkg_resources import resource_filename
 
 
 def eat_logs(log_dict):
@@ -27,30 +27,29 @@ def __main__():
     parser.add_argument("--cluster", action="store", dest="cluster")
     parser.add_argument("--daner", action="store", dest="daner")
     parser.add_argument("--cores", action="store", dest="cores", default=1)
-    parser.add_argument("--output-dir", action="store", dest="output_dir", default=1)
-    parser.add_argument("--ref-1000g", action="store", dest="ref_1000g",
-                        required=True)
+    parser.add_argument("--output-dir", action="store", dest="output_dir")
+    parser.add_argument("--ref-1000g", action="store", dest="ref_1000g")
     parser.add_argument("--ref-gene-loc", action="store", dest="ref_gene_loc",
                         default=resource_filename(
-                            Requirement.parse(
-                                "ricopili_magma"), "resources/magma_linux/reference_data/NCBI37.3.gene.loc"))
+                            "postimputation.ricopili_magma",
+                            "resources/magma_linux/reference_data/NCBI37.3.gene.loc"))
     args = parser.parse_args()
-
-    for param, val in vars(args).items():
-        print("{0}: {1}".format(param, val))
 
     # execute MAGMA workflow
     success = snakemake(
-        snakefile=resource_filename(
-            Requirement.parse(
-                "ricopili_magma"), "Snakefile"),
-        snakemakepath="",
-        log_handler=eat_logs,
-        config=vars(args),  # TODO: make less hacky. The potential for collisions is high
-        cluster_config=resource_filename(
-                            Requirement.parse(
-                                "ricopili_magma"), "broad_uger_config.yaml"),
-        drmaa=" -l h_vmem={cluster.h_vmem} ")
+        snakefile=resource_filename("postimputation.ricopili_magma",
+                                    "Snakefile"),
+        # log_handler=eat_logs,
+        configfile=resource_filename("postimputation.ricopili_magma",
+                                     "config.yaml"),
+        #config=config,  # TODO: make less hacky. The potential for collisions is high
+        #config_args=config_args,
+        cluster_config=resource_filename("postimputation.ricopili_magma",
+                                         "broad_uger_config.yaml"),
+        printshellcmds=True,
+        drmaa=" -l h_vmem={cluster.h_vmem} ",
+        forcerun=["merge_test_sets"],
+        latency_wait=60)
 
     # check status
     if success:
