@@ -70,7 +70,7 @@ def __main__():
         snakemake_api_call["cluster_config"] = resource_filename(
             "postimputation.ricopili_magma", "broad_uger_config.yaml")
     elif args.mode == "qsub":
-        snakemake_api_call["cluster"] = "qsub -l h_vmem={cluster.h_vmem} "
+        snakemake_api_call["cluster"] = "qsub -lnodes=1:mem{cluster.h_vmem} "
         snakemake_api_call["cluster_config"] = resource_filename(
             "postimputation.ricopili_magma", "broad_uger_config.yaml")
     elif args.mode == "local":
