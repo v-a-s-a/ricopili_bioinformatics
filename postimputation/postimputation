@@ -27,7 +27,7 @@ def __main__():
 
     # parse command line arguments
     parser = arg.ArgumentParser()
-    parser.add_argument("--cluster", action="store_true", dest="cluster")
+    parser.add_argument("--mode", action="store", dest="mode", choices=["drmaa", "qsub", "local"])
     parser.add_argument("--daner", action="store", dest="daner")
     parser.add_argument("--output-dir", action="store", dest="output_dir")
     parser.add_argument("--ref-1000g", action="store", dest="ref_1000g")
@@ -65,10 +65,16 @@ def __main__():
         "latency_wait": 60
     }
 
-    if args.cluster:
+    if args.mode == "drmaa":
         snakemake_api_call["drmaa"] = " -l h_vmem={cluster.h_vmem} "
         snakemake_api_call["cluster_config"] = resource_filename(
             "postimputation.ricopili_magma", "broad_uger_config.yaml")
+    elif args.mode == "qsub":
+        snakemake_api_call["cluster"] = "qsub -l h_vmem={cluster.h_vmem} "
+        snakemake_api_call["cluster_config"] = resource_filename(
+            "postimputation.ricopili_magma", "broad_uger_config.yaml")
+    elif args.mode == "local":
+        pass
 
     # execute MAGMA workflow
     success = snakemake(**snakemake_api_call)
