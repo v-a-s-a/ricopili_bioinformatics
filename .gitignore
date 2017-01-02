@@ -1,1 +1,5 @@
 *.pyc
+.snakemake/*
+build/*
+dist/*
+ricopili_bioinformatics.egg-info/*
