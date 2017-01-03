@@ -3,6 +3,7 @@ __default__:
 
 test_gene_sets:
   h_vmem: 5g
+  walltime: "10:00"
 
 merge_test_sets:
   h_vmem: 10g

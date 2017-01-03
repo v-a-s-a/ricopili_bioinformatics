@@ -68,11 +68,11 @@ def __main__():
     if args.mode == "drmaa":
         snakemake_api_call["drmaa"] = " -l h_vmem={cluster.h_vmem} "
         snakemake_api_call["cluster_config"] = resource_filename(
-            "postimputation.ricopili_magma", "broad_uger_config.yaml")
+            "postimputation.ricopili_magma", "cluster_config.yaml")
     elif args.mode == "qsub":
-        snakemake_api_call["cluster"] = "qsub -l mem={cluster.h_vmem}b "
+        snakemake_api_call["cluster"] = "qsub -l mem={cluster.h_vmem}b -lwalltime={cluster.walltime}"
         snakemake_api_call["cluster_config"] = resource_filename(
-            "postimputation.ricopili_magma", "broad_uger_config.yaml")
+            "postimputation.ricopili_magma", "cluster_config.yaml")
     elif args.mode == "local":
         pass
 

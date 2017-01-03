@@ -12,7 +12,7 @@ setup(name="ricopili_bioinformatics",
       install_requires=["snakemake", "pyyaml"],
       scripts=["postimputation/postimputation"],
       package_data={"postimputation.ricopili_magma":
-         ["broad_uger_config.yaml",
+         ["cluster_config.yaml",
           "Snakefile",
           "resources/magma_linux/magma",
           "resources/magma_linux/reference_data/NCBI37.3.gene.loc"]},
