@@ -1,4 +1,4 @@
-AUTOSOMES = [str(x) for x in range(1, 3)]
+AUTOSOMES = [str(x) for x in range(1, 23)]
 
 rule all:
     input:
@@ -49,7 +49,8 @@ rule test_gene_sets:
 
 rule merge_test_sets:
     input:
-        expand(config["output_dir"] + "gene_results.batch{chrom}_chr.genes.raw", chrom=AUTOSOMES)
+        expand(config["output_dir"] + "gene_results.batch{chrom}_chr.genes.raw",
+               chrom=AUTOSOMES)
     output:
         config["output_dir"] + "merged_results.genes.out"
     params:

@@ -27,7 +27,10 @@ def __main__():
 
     # parse command line arguments
     parser = arg.ArgumentParser()
-    parser.add_argument("--mode", action="store", dest="mode", choices=["drmaa", "qsub", "local"])
+    parser.add_argument("--mode", action="store", dest="mode",
+                        choices=["drmaa", "qsub", "local"])
+    parser.add_argument("--cluster-env", action="store", dest="cluster_env",
+                        choices=["broad", "lisa", None])
     parser.add_argument("--daner", action="store", dest="daner")
     parser.add_argument("--output-dir", action="store", dest="output_dir")
     parser.add_argument("--ref-1000g", action="store", dest="ref_1000g")
@@ -49,12 +52,6 @@ def __main__():
     with open(config_file, 'w') as config_conn:
         yaml.dump(config, config_conn, default_flow_style=True)
 
-    # try and use the UGER module in case we are on the broad server
-    try:
-        sp.call(["use", "UGER"])
-    except FileNotFoundError:
-        pass
-
     # put together the call to snakemake
     snakemake_api_call = {
         "snakefile": resource_filename("postimputation.ricopili_magma",
@@ -62,19 +59,36 @@ def __main__():
         # log_handler=eat_logs,
         "configfile": config_file,
         # config=config, # blerg -- why doesn't this work?
-        "latency_wait": 60
+        "latency_wait": 30,
+        "cluster_config": resource_filename(
+            "postimputation.ricopili_magma", "cluster_config.yaml")
     }
 
+    # configure cluster/local execution
     if args.mode == "drmaa":
-        snakemake_api_call["drmaa"] = " -l h_vmem={cluster.h_vmem} "
-        snakemake_api_call["cluster_config"] = resource_filename(
-            "postimputation.ricopili_magma", "cluster_config.yaml")
+        snakemake_api_call["drmaa"] = ""
+        snakemake_api_call["nodes"] = 22
     elif args.mode == "qsub":
-        snakemake_api_call["cluster"] = "qsub -l mem={cluster.h_vmem}b -lwalltime={cluster.walltime}"
-        snakemake_api_call["cluster_config"] = resource_filename(
-            "postimputation.ricopili_magma", "cluster_config.yaml")
+        snakemake_api_call["cluster"] = "qsub"
+        snakemake_api_call["nodes"] = 22
     elif args.mode == "local":
         pass
+
+    # add some job submission options for each cluster
+    if args.cluster_env == "broad" and args.mode == "drmaa":
+        sp.call(["use", "UGER"])
+        snakemake_api_call["drmaa"] += " -l h_vmem={cluster.h_vmem} "
+    elif args.cluster_env == "lisa" and args.mode == "drmaa":
+        snakemake_api_call["drmaa"] += " -l mem={cluster.h_vmem} -l walltime={cluster.walltime}"
+        # os.environ["DRMAA_LIBRARY_PATH"] = "/usr/lib/pbs-drmaa/lib/libdrmaa.so.1.0.10"
+    elif args.mode == "local":
+        pass
+    else:
+        raise Exception("Your requested cluster environment and submission "
+                        "mode combination is not currently supported")
+
+    for k, v in snakemake_api_call.items():
+        print(k, v)
 
     # execute MAGMA workflow
     success = snakemake(**snakemake_api_call)
