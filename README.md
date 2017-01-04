@@ -10,9 +10,9 @@ The postimputation tool can
 
 I would recommend installing into a python virtual environment such as `virtualev` or `conda`.
 
-## Running on LISA
+## Running MAGMA
 
-Running is simple:
+Running is simple. On the LISA cluster, you should start a long-running interactive session and execute the following command:
 
     postimputation --mode drmaa \
                    --cluster-env lisa \
@@ -31,5 +31,6 @@ Each option is fairly straightforward:
   
 The output directory currently contains many intermediate files in addition to the file output. The final output file can be found at `/path/to/output/directory/merged_results.*`.
 
+If you are running on the Broad's UGER, the `--cluster-env` option should be set to `broad`.
 
 
