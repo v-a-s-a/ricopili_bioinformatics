@@ -1,10 +1,14 @@
 # MAGMA
 
+Currently, MAGMA is wrapped into the postimputation tool. It uses Snakemake to specify and execute the MAGMA pipeline.
+
 ## Installation
 
-I would recommend using a virtual environment. Either `virtualev`, its relatives, or `conda`.
+The postimputation tool can 
 
     pip install git+https://github.com/vtrubets/ricopili_bioinformatics.git
+
+I would recommend installing into a python virtual environment such as `virtualev` or `conda`.
 
 ## Running on LISA
 
