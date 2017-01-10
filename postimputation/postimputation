@@ -9,7 +9,6 @@ import argparse as arg
 import subprocess as sp
 import yaml
 import os
-import sys
 
 from pkg_resources import resource_filename
 
@@ -23,25 +22,34 @@ def eat_logs(log_dict):
 
 def __main__():
 
-    # repo_root = os.path.dirname(os.path.abspath(__file__)).strip("src/snakemake/")
-
     # parse command line arguments
     parser = arg.ArgumentParser()
     parser.add_argument("--mode", action="store", dest="mode",
                         choices=["drmaa", "qsub", "local"])
     parser.add_argument("--cluster-env", action="store", dest="cluster_env",
                         choices=["broad", "lisa", None])
-    parser.add_argument("--daner", action="store", dest="daner")
     parser.add_argument("--output-dir", action="store", dest="output_dir")
-    parser.add_argument("--ref-1000g", action="store", dest="ref_1000g")
-    parser.add_argument("--sample-size", action="store", dest="study_sample_size")
-    parser.add_argument("--ref-gene-loc", action="store", dest="ref_gene_loc",
-                        default=resource_filename(
-                            "postimputation.ricopili_magma",
-                            "resources/magma_linux/reference_data/NCBI37.3.gene.loc"))
+
+    # breakout parsers for different tool pipelines
+    subparsers = parser.add_subparsers(help="Tool sub-pipeline help.")
+
+    # MAGMA
+    magma_parser = subparsers.add_parser("magma", help="Multi-marker Analysis of GenoMic Annotation")
+    magma_parser.add_argument("--daner", action="store", dest="daner")
+    magma_parser.add_argument("--ref-1000g", action="store", dest="ref_1000g")
+    magma_parser.add_argument("--sample-size", action="store", dest="study_sample_size")
+    magma_parser.add_argument("--ref-gene-loc", action="store", dest="ref_gene_loc",
+                              default=resource_filename(
+                                  "postimputation.ricopili_magma",
+                                  "resources/magma_linux/reference_data/NCBI37.3.gene.loc"))
+
+    # TIEFighter
+    tiefighter_parser = subparsers.add_parser("tiefighter", help="https://github.com/ivankosmos/TIEFighter")
+    tiefighter_parser.add_argument("--input", action="store", dest="input")
+
     args = parser.parse_args()
 
-    # put together the snakemake config
+    # Snakemake config
     config = {"magma_bin": resource_filename("postimputation.ricopili_magma",
                                              "resources/magma_linux/magma")}
     config.update(vars(args))
@@ -64,7 +72,7 @@ def __main__():
             "postimputation.ricopili_magma", "cluster_config.yaml")
     }
 
-    # configure cluster/local execution
+    # configure execution backend
     if args.mode == "drmaa":
         snakemake_api_call["drmaa"] = ""
         snakemake_api_call["nodes"] = 22
@@ -74,9 +82,9 @@ def __main__():
     elif args.mode == "local":
         pass
 
-    # add some job submission options for each cluster
+    # configure execution environment
     if args.cluster_env == "broad" and args.mode == "drmaa":
-        sp.call(["use", "UGER"])
+        os.system("eval `/broad/software/dotkit/init -b`; use UGER")
         snakemake_api_call["drmaa"] += " -l h_vmem={cluster.h_vmem} "
     elif args.cluster_env == "lisa" and args.mode == "drmaa":
         snakemake_api_call["drmaa"] += " -l mem={cluster.h_vmem} -l walltime={cluster.walltime}"
@@ -87,19 +95,8 @@ def __main__():
         raise Exception("Your requested cluster environment and submission "
                         "mode combination is not currently supported")
 
-    for k, v in snakemake_api_call.items():
-        print(k, v)
-
     # execute MAGMA workflow
-    success = snakemake(**snakemake_api_call)
-
-    # check status
-    if success:
-        print("Success!")
-        sys.exit(0)
-    else:
-        print("Postimputation execution of MAGMA failed.")
-        sys.exit(1)
+    snakemake(**snakemake_api_call)
 
 
 if __name__ == "__main__":
