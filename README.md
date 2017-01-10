@@ -8,7 +8,7 @@ The postimputation tool can
 
     pip install git+https://github.com/vtrubets/ricopili_bioinformatics.git
 
-I would recommend installing into a python virtual environment such as `virtualev` or `conda`.
+I would recommend installing into a python virtual environment manager such as `virtualev` or `conda`.
 
 ## Running MAGMA
 
