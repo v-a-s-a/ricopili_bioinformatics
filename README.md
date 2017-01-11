@@ -17,10 +17,10 @@ Running is simple. On the LISA cluster, you should start a long-running interact
     postimputation --mode drmaa \
                    --cluster-env lisa \
                    --output-dir "/path/to/output/directory/" \
-                   magma \
-                   --daner "/path/to/input.daner" \
-                   --ref-1000g "/path/to/1000G_reference_file_prefix" \
-                   --sample-size 20000
+                       magma \
+                           --daner "/path/to/input.daner" \
+                           --ref-1000g "/path/to/1000G_reference_file_prefix" \
+                           --sample-size 20000
                    
 Each option is fairly straightforward. Options are split into generic `postimputation` options, followed by `magma` specific options:
   * The `--mode` option specifies the execution mode. You can run MAGMA in a few contexts: a DRMAA compatible cluster, a less   capable "qsub" compatible cluster or a local machine.
