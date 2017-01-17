@@ -6,9 +6,10 @@ example tool.
 
 from snakemake import snakemake
 import argparse as arg
-import subprocess as sp
 import yaml
 import os
+
+from .ricopili_magma.generate_snakefile import rule
 
 from pkg_resources import resource_filename
 

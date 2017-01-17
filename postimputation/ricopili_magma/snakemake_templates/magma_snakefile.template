@@ -29,23 +29,7 @@ rule annotate_summary_stats:
         " --gene-loc {config[ref_gene_loc]} "
         " --out {params.output_prefix}) 2> {log}"
 
-rule test_gene_sets:
-    input:
-        config["output_dir"] + "summary.genes.annot"
-    output:
-        out = config["output_dir"] + "gene_results.batch{chrom}_chr.genes.out",
-        raw = config["output_dir"] + "gene_results.batch{chrom}_chr.genes.raw",
-    log:
-        log = config["output_dir"] + "gene_results.batch{chrom}_chr.log",
-    params:
-        batch_prefix = config["output_dir"] + "gene_results"
-    shell:
-        "{config[magma_bin]} --bfile {config[ref_1000g]} "
-        " --batch {wildcards.chrom} chr "
-        " --pval {config[daner]} "
-        " N={config[study_sample_size]} "
-        " --gene-annot {input} "
-        " --out {params.batch_prefix} "
+__TEST_GENE_SETS_RULE__
 
 rule merge_test_sets:
     input:

@@ -1,0 +1,27 @@
+rule test_gene_sets:
+    input:
+        config["output_dir"] + "summary.genes.annot"
+    output:
+        out = config["output_dir"] + "gene_results.batch{chrom}_chr.genes.out",
+        raw = config["output_dir"] + "gene_results.batch{chrom}_chr.genes.raw"
+    log:
+        log = config["output_dir"] + "gene_results.batch{chrom}_chr.log"
+    params:
+        batch_prefix = config["output_dir"] + "gene_results"
+    run:
+        import subprocess as sp
+
+        cmd = ["{{config[magma_bin]}}", "--bfile",
+               "{{config[ref_1000g]}}", "--batch",
+               "{chrom}", "chr",
+               "--pval", "{{config[daner]}}",
+               "N={{config[study_sample_size]}}",
+               "--gene-annot", "{input}",
+               "--out", "{{params.batch_prefix}}"]
+
+        pids = []
+        for batch in {{output}}.pop():
+            pids.append(sp.Popen(cmd)
+        exit_codes = [p.wait() for p in pids]
+
+p
