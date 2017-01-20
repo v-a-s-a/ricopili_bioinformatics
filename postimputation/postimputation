@@ -56,7 +56,10 @@ def __main__():
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
-    config_file = os.path.join(args.output_dir, "config.yaml")
+    if not os.path.exists(os.path.join(args.output_dir, 'config')):
+        os.makedirs(os.path.join(args.output_dir, 'config'))
+
+    config_file = os.path.join(args.output_dir, "config/config.yaml")
     with open(config_file, 'w') as config_conn:
         yaml.dump(config, config_conn, default_flow_style=True)
 
@@ -67,7 +70,7 @@ def __main__():
         # log_handler=eat_logs,
         "configfile": config_file,
         # config=config, # blerg -- why doesn't this work?
-        "latency_wait": 30,
+        "latency_wait": 60,
         "cluster_config": resource_filename(
             "postimputation.ricopili_magma", "cluster_config.yaml")
     }

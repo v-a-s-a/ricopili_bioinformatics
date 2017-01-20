@@ -1,61 +1,70 @@
 AUTOSOMES = [str(x) for x in range(1, 23)]
 
+intermediate_dir = config["output_dir"] + "intermediate_results/"
+log_dir = config["output_dir"] + "logs/"
+
 rule all:
     input:
-        config["output_dir"] + "merged_results.genes.out"
+        config["output_dir"] + "genomewide_test_results.genes.out"
 
 rule make_snp_location_file:
     input:
         config["daner"]
     output:
-        config["output_dir"] + "snp.loc"
+        intermediate_dir + "snp.loc"
     shell:
         "cat {input} | awk '{{print $2, $1, $3}}'  > {output}"
 
 
 rule annotate_summary_stats:
     input:
-        config["output_dir"] + "snp.loc"
+        intermediate_dir + "snp.loc"
     output:
-        config["output_dir"] + "summary.genes.annot",
-        log = config["output_dir"] + "summary.log"
+        intermediate_dir + "annotate_summary_stats.genes.annot",
     log:
-        config["output_dir"] + "summary.annot.genes.stderr"
+        output = log_dir + "annotate_summary_stats.stderr",
+        magma = log_dir + "annotate_summary_stats.log"
     params:
-        output_prefix = config["output_dir"] + "summary"
+        output_prefix = intermediate_dir + "annotate_summary_stats"
     shell:
         "({config[magma_bin]}  --annotate "
         " --snp-loc {input} "
         " --gene-loc {config[ref_gene_loc]} "
-        " --out {params.output_prefix}) 2> {log}"
+        " --out {params.output_prefix}) 2> {log.output};"
+        "mv {params.output_prefix}.log {log.magma}"
 
 rule test_gene_sets:
     input:
-        config["output_dir"] + "summary.genes.annot"
+        intermediate_dir + "annotate_summary_stats.genes.annot"
     output:
-        out = config["output_dir"] + "gene_results.batch{chrom}_chr.genes.out",
-        raw = config["output_dir"] + "gene_results.batch{chrom}_chr.genes.raw",
+        intermediate_dir + "gene_results.batch{chrom}_chr.genes.out",
+        intermediate_dir + "gene_results.batch{chrom}_chr.genes.raw",
     log:
-        log = config["output_dir"] + "gene_results.batch{chrom}_chr.log",
+        magma = log_dir + "gene_results.batch{chrom}_chr.log",
     params:
-        batch_prefix = config["output_dir"] + "gene_results"
+        batch_prefix = intermediate_dir + "gene_results"
     shell:
         "{config[magma_bin]} --bfile {config[ref_1000g]} "
         " --batch {wildcards.chrom} chr "
         " --pval {config[daner]} "
         " N={config[study_sample_size]} "
         " --gene-annot {input} "
-        " --out {params.batch_prefix} "
+        " --out {params.batch_prefix}; "
+        "mv {params.batch_prefix}.batch{wildcards.chrom}_chr.log {log.magma}"
 
 rule merge_test_sets:
     input:
-        expand(config["output_dir"] + "gene_results.batch{chrom}_chr.genes.raw",
+        expand(intermediate_dir + "gene_results.batch{chrom}_chr.genes.raw",
                chrom=AUTOSOMES)
     output:
-        config["output_dir"] + "merged_results.genes.out"
+        config["output_dir"] + "genomewide_test_results.genes.out",
+        config["output_dir"] + "genomewide_test_results.genes.raw"
+    log:
+        magma = log_dir + "genomewide_test_results.log"
     params:
-        batch_prefix = config["output_dir"] + "gene_results",
-        output_prefix = config["output_dir"] + "merged_results"
+        batch_prefix = intermediate_dir + "gene_results",
+        output_prefix = config["output_dir"] + "genomewide_test_results"
     shell:
         "{config[magma_bin]} --merge {params.batch_prefix} "
-        " --out {params.output_prefix} "
+        " --out {params.output_prefix};"
+        "mv {params.output_prefix}.log {log.magma}"
