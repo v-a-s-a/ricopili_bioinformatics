@@ -6,7 +6,6 @@ example tool.
 
 from snakemake import snakemake
 import argparse as arg
-import subprocess as sp
 import yaml
 import os
 
@@ -18,6 +17,23 @@ def eat_logs(log_dict):
     Eat the snakemake print-to-commandline logs.
     """
     pass
+
+
+def magma_simple_logger(log_dict):
+    """
+    Print the basic execution of the pipeline.
+    """
+    if log_dict["level"] == "job_info":
+        if log_dict["name"] == "make_snp_location_file":
+            print("\tCreating SNP location file")
+        elif log_dict["name"] == "annotate_summary_stats":
+            print("\tAnnotating summary statistics with gene-membership")
+        elif log_dict["name"] == "test_gene_sets":
+            print("\tTesting genes on chr{chrom}".format(chrom=log_dict["wildcards"]["chrom"]))
+        elif log_dict["name"] == "merge_test_sets":
+            print("\tMerging test results")
+        else:
+            pass
 
 
 def __main__():
@@ -56,10 +72,10 @@ def __main__():
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
-    if not os.path.exists(os.path.join(args.output_dir, 'config')):
-        os.makedirs(os.path.join(args.output_dir, 'config'))
+    if not os.path.exists(os.path.join(args.output_dir, '.config')):
+        os.makedirs(os.path.join(args.output_dir, '.config'))
 
-    config_file = os.path.join(args.output_dir, "config/config.yaml")
+    config_file = os.path.join(args.output_dir, ".config/config.yaml")
     with open(config_file, 'w') as config_conn:
         yaml.dump(config, config_conn, default_flow_style=True)
 
@@ -67,7 +83,7 @@ def __main__():
     snakemake_api_call = {
         "snakefile": resource_filename("postimputation.ricopili_magma",
                                        "Snakefile"),
-        # log_handler=eat_logs,
+        "log_handler": magma_simple_logger,
         "configfile": config_file,
         # config=config, # blerg -- why doesn't this work?
         "latency_wait": 60,
@@ -99,7 +115,10 @@ def __main__():
                         "mode combination is not currently supported")
 
     # execute MAGMA workflow
-    snakemake(**snakemake_api_call)
+    print("Executing MAGMA")
+    returncode = snakemake(**snakemake_api_call)
+    if returncode == 1:
+        print("done")
 
 
 if __name__ == "__main__":
