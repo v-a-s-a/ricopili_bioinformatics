@@ -1,6 +1,7 @@
-# MAGMA
+# Ricopili Bioinformatics
 
-Currently, MAGMA is wrapped into the bioinformatics tool. It uses Snakemake to specify and execute the MAGMA pipeline.
+This is a set of workflows meant to be used after running a GWAS with Ricopili.
+
 
 ## Installation
 
@@ -10,7 +11,17 @@ The bioinformatics tool can be installed with the following command:
 
 I would recommend installing into a python virtual environment manager such as `virtualev` or `conda`.
 
-## Running MAGMA
+# RegionAnnotator
+
+Running the RegionAnnotator on a DANER file on a local node.
+
+    bioinformatics --mode drmaa \
+                   --cluster-env local \
+                   --output-dir "/path/to/output/directory/" \
+                       region_annotator \
+                           --daner "/path/to/input.daner" \
+
+## MAGMA
 
 Running is simple. On the LISA cluster, you should start a long-running interactive session and execute the following command:
 
