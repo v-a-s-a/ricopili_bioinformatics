@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-A prototype for the ricopili post-imputation pipeline. Uses MAGMA as an
+A prototype for the ricopili bioinformatics pipeline. Uses MAGMA as an
 example tool.
 """
 
@@ -56,7 +56,7 @@ def __main__():
     magma_parser.add_argument("--sample-size", action="store", dest="study_sample_size")
     magma_parser.add_argument("--ref-gene-loc", action="store", dest="ref_gene_loc",
                               default=resource_filename(
-                                  "postimputation.ricopili_magma",
+                                  "bioinformatics.ricopili_magma",
                                   "resources/magma_linux/reference_data/NCBI37.3.gene.loc"))
 
     # TIEFighter
@@ -66,7 +66,7 @@ def __main__():
     args = parser.parse_args()
 
     # Snakemake config
-    config = {"magma_bin": resource_filename("postimputation.ricopili_magma",
+    config = {"magma_bin": resource_filename("bioinformatics.ricopili_magma",
                                              "resources/magma_linux/magma")}
     config.update(vars(args))
     if not os.path.exists(args.output_dir):
@@ -81,14 +81,14 @@ def __main__():
 
     # put together the call to snakemake
     snakemake_api_call = {
-        "snakefile": resource_filename("postimputation.ricopili_magma",
+        "snakefile": resource_filename("bioinformatics.ricopili_magma",
                                        "Snakefile"),
         "log_handler": magma_simple_logger,
         "configfile": config_file,
         # config=config, # blerg -- why doesn't this work?
         "latency_wait": 60,
         "cluster_config": resource_filename(
-            "postimputation.ricopili_magma", "cluster_config.yaml")
+            "bioinformatics.ricopili_magma", "cluster_config.yaml")
     }
 
     # configure execution backend
