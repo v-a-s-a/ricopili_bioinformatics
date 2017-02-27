@@ -47,10 +47,13 @@ def __main__():
     parser.add_argument("--output-dir", action="store", dest="output_dir")
 
     # breakout parsers for different tool pipelines
-    subparsers = parser.add_subparsers(help="Tool sub-pipeline help.")
+    subparsers = parser.add_subparsers(help="Tool sub-pipeline help.",
+                                       dest="workflow")
 
     # MAGMA
-    magma_parser = subparsers.add_parser("magma", help="Multi-marker Analysis of GenoMic Annotation")
+    magma_parser = subparsers.add_parser(
+        "magma",
+        help="Multi-marker Analysis of GenoMic Annotation")
     magma_parser.add_argument("--daner", action="store", dest="daner")
     magma_parser.add_argument("--ref-1000g", action="store", dest="ref_1000g")
     magma_parser.add_argument("--sample-size", action="store", dest="study_sample_size")
@@ -59,11 +62,22 @@ def __main__():
                                   "bioinformatics.ricopili_magma",
                                   "resources/magma_linux/reference_data/NCBI37.3.gene.loc"))
 
-    # TIEFighter
-    tiefighter_parser = subparsers.add_parser("tiefighter", help="https://github.com/ivankosmos/TIEFighter")
-    tiefighter_parser.add_argument("--input", action="store", dest="input")
+    # RegionAnnotator
+    region_annotator_parser = subparsers.add_parser(
+        "region_annotator",
+        help="https://github.com/ivankosmos/RegionAnnotator")
+    region_annotator_parser.add_argument("--daner", action="store", dest="daner")
 
     args = parser.parse_args()
+
+    if args.workflow == "magma":
+        snakefile = resource_filename("bioinformatics.ricopili_magma",
+                                      "Snakefile")
+        log_handler = magma_simple_logger
+    elif args.workflow == "region_annotator":
+        snakefile = resource_filename("bioinformatics.region_annotator",
+                                      "region_annotator.snakefile")
+        log_handler = None
 
     # Snakemake config
     config = {"magma_bin": resource_filename("bioinformatics.ricopili_magma",
@@ -79,11 +93,11 @@ def __main__():
     with open(config_file, 'w') as config_conn:
         yaml.dump(config, config_conn, default_flow_style=True)
 
+
     # put together the call to snakemake
     snakemake_api_call = {
-        "snakefile": resource_filename("bioinformatics.ricopili_magma",
-                                       "Snakefile"),
-        "log_handler": magma_simple_logger,
+        "snakefile": snakefile,
+        "log_handler": log_handler,
         "configfile": config_file,
         # config=config, # blerg -- why doesn't this work?
         "latency_wait": 60,
@@ -114,8 +128,8 @@ def __main__():
         raise Exception("Your requested cluster environment and submission "
                         "mode combination is not currently supported")
 
-    # execute MAGMA workflow
-    print("Executing MAGMA")
+    # execute workflow
+    print("Executing Ricopili bioinformatics")
     returncode = snakemake(**snakemake_api_call)
     if returncode == 1:
         print("done")
