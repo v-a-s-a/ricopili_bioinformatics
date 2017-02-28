@@ -12,12 +12,13 @@ setup(name="ricopili_bioinformatics",
       install_requires=["snakemake", "pyyaml"],
       scripts=["bioinformatics/bioinformatics"],
       package_data={
-          "bioinformatics.ricopili_magma":
-          ["cluster_config.yaml",
-           "Snakefile",
+          "bioinformatics.config":
+          ["cluster_config.yaml"],
+          "bioinformatics.tools.magma":
+          ["magma.snakefile",
            "resources/magma_linux/magma",
            "resources/magma_linux/reference_data/NCBI37.3.gene.loc"],
-          "bioinformatics.region_annotator":
+          "bioinformatics.tools.region_annotator":
           ["region_annotator.snakefile",
            "resources/RegionAnnotator-1.6.1/inputGene/gencode.genes.txt",
            "resources/RegionAnnotator-1.6.1/inputReference/*",
