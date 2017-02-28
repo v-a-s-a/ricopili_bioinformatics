@@ -38,7 +38,7 @@ def magma_simple_logger(log_dict):
 
 def __main__():
 
-    # parse command line arguments
+    # Argument parser for umbrella program
     parser = arg.ArgumentParser()
     parser.add_argument("--mode", action="store", dest="mode",
                         choices=["drmaa", "qsub", "local"])
@@ -80,8 +80,7 @@ def __main__():
         log_handler = None
 
     # Snakemake config
-    config = {"magma_bin": resource_filename("bioinformatics.ricopili_magma",
-                                             "resources/magma_linux/magma")}
+    config = {}
     config.update(vars(args))
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
@@ -92,7 +91,6 @@ def __main__():
     config_file = os.path.join(args.output_dir, ".config/config.yaml")
     with open(config_file, 'w') as config_conn:
         yaml.dump(config, config_conn, default_flow_style=True)
-
 
     # put together the call to snakemake
     snakemake_api_call = {
