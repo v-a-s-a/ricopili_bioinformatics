@@ -4,36 +4,10 @@ A prototype for the ricopili bioinformatics pipeline. Uses MAGMA as an
 example tool.
 """
 
-from snakemake import snakemake
 import argparse as arg
-import yaml
-import os
 
-from pkg_resources import resource_filename
-
-
-def eat_logs(log_dict):
-    """
-    Eat the snakemake print-to-commandline logs.
-    """
-    pass
-
-
-def magma_simple_logger(log_dict):
-    """
-    Print the basic execution of the pipeline.
-    """
-    if log_dict["level"] == "job_info":
-        if log_dict["name"] == "make_snp_location_file":
-            print("\tCreating SNP location file")
-        elif log_dict["name"] == "annotate_summary_stats":
-            print("\tAnnotating summary statistics with gene-membership")
-        elif log_dict["name"] == "test_gene_sets":
-            print("\tTesting genes on chr{chrom}".format(chrom=log_dict["wildcards"]["chrom"]))
-        elif log_dict["name"] == "merge_test_sets":
-            print("\tMerging test results")
-        else:
-            pass
+from bioinformatics.tools.region_annotator import RegionAnnotator
+from bioinformatics.tools.magma import Magma
 
 
 def __main__():
@@ -50,87 +24,16 @@ def __main__():
     subparsers = parser.add_subparsers(help="Tool sub-pipeline help.",
                                        dest="workflow")
 
-    # MAGMA
-    magma_parser = subparsers.add_parser(
-        "magma",
-        help="Multi-marker Analysis of GenoMic Annotation")
-    magma_parser.add_argument("--daner", action="store", dest="daner")
-    magma_parser.add_argument("--ref-1000g", action="store", dest="ref_1000g")
-    magma_parser.add_argument("--sample-size", action="store", dest="study_sample_size")
-    magma_parser.add_argument("--ref-gene-loc", action="store", dest="ref_gene_loc",
-                              default=resource_filename(
-                                  "bioinformatics.ricopili_magma",
-                                  "resources/magma_linux/reference_data/NCBI37.3.gene.loc"))
-
-    # RegionAnnotator
-    region_annotator_parser = subparsers.add_parser(
-        "region_annotator",
-        help="https://github.com/ivankosmos/RegionAnnotator")
-    region_annotator_parser.add_argument("--daner", action="store", dest="daner")
+    # Add tools to the workflow
+    magma = Magma(subparsers)
+    region_annotator = RegionAnnotator(subparsers)
 
     args = parser.parse_args()
 
     if args.workflow == "magma":
-        snakefile = resource_filename("bioinformatics.ricopili_magma",
-                                      "Snakefile")
-        log_handler = magma_simple_logger
+        magma.execute(execution_mode=args.mode, context=args.cluster_env, output_dir=)
     elif args.workflow == "region_annotator":
-        snakefile = resource_filename("bioinformatics.region_annotator",
-                                      "region_annotator.snakefile")
-        log_handler = None
-
-    # Snakemake config
-    config = {}
-    config.update(vars(args))
-    if not os.path.exists(args.output_dir):
-        os.makedirs(args.output_dir)
-
-    if not os.path.exists(os.path.join(args.output_dir, '.config')):
-        os.makedirs(os.path.join(args.output_dir, '.config'))
-
-    config_file = os.path.join(args.output_dir, ".config/config.yaml")
-    with open(config_file, 'w') as config_conn:
-        yaml.dump(config, config_conn, default_flow_style=True)
-
-    # put together the call to snakemake
-    snakemake_api_call = {
-        "snakefile": snakefile,
-        "log_handler": log_handler,
-        "configfile": config_file,
-        # config=config, # blerg -- why doesn't this work?
-        "latency_wait": 60,
-        "cluster_config": resource_filename(
-            "bioinformatics.ricopili_magma", "cluster_config.yaml")
-    }
-
-    # configure execution backend
-    if args.mode == "drmaa":
-        snakemake_api_call["drmaa"] = ""
-        snakemake_api_call["nodes"] = 22
-    elif args.mode == "qsub":
-        snakemake_api_call["cluster"] = "qsub"
-        snakemake_api_call["nodes"] = 22
-    elif args.mode == "local":
-        pass
-
-    # configure execution environment
-    if args.cluster_env == "broad" and args.mode == "drmaa":
-        os.system("eval `/broad/software/dotkit/init -b`; use UGER")
-        snakemake_api_call["drmaa"] += " -l h_vmem={cluster.h_vmem} "
-    elif args.cluster_env == "lisa" and args.mode == "drmaa":
-        snakemake_api_call["drmaa"] += " -l mem={cluster.h_vmem} -l walltime={cluster.walltime}"
-        # os.environ["DRMAA_LIBRARY_PATH"] = "/usr/lib/pbs-drmaa/lib/libdrmaa.so.1.0.10"
-    elif args.mode == "local":
-        pass
-    else:
-        raise Exception("Your requested cluster environment and submission "
-                        "mode combination is not currently supported")
-
-    # execute workflow
-    print("Executing Ricopili bioinformatics")
-    returncode = snakemake(**snakemake_api_call)
-    if returncode == 1:
-        print("done")
+        region_annotator.execute()
 
 
 if __name__ == "__main__":
