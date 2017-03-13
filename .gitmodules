@@ -1,0 +1,3 @@
+[submodule "bioinformatics/tools/ld_score/resources/ldsc"]
+	path = bioinformatics/tools/ld_score/resources/ldsc
+	url = https://github.com/bulik/ldsc.git
