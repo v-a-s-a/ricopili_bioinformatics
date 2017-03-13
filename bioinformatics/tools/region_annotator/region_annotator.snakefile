@@ -2,15 +2,18 @@ import os
 from pkg_resources import resource_filename
 
 gene_data_file = resource_filename(
-    "bioinformatics.region_annotator",
+    "bioinformatics.tools.region_annotator",
     "resources/RegionAnnotator-1.6.1/inputGene/gencode.genes.txt")
 reference_directory = resource_filename(
-    "bioinformatics.region_annotator",
+    "bioinformatics.tools.region_annotator",
     "resources/RegionAnnotator-1.6.1/inputReference/")
 region_annotator_jar = resource_filename(
-    "bioinformatics.region_annotator",
+    "bioinformatics.tools.region_annotator",
     "resources/RegionAnnotator-1.6.1/RegionAnnotator-1.6.1.jar")
+region_annotator = "java -jar " + region_annotator_jar
 
+if config["cluster_env"] == "broad":
+    region_annotator = "eval `/broad/software/dotkit/init -b`; reuse Java-1.8 || true;" + region_annotator
 
 final_output = os.path.join(config["output_dir"], "region_annotator_output.xlsx")
 formatted_input = os.path.join(config["output_dir"], "formated_input.daner")
@@ -48,7 +51,7 @@ rule load_gene_data:
     output:
         touch(os.path.join(config["output_dir"], "load_gene_data.done"))
     shell:
-        "java -jar {region_annotator_jar} -input {input} -gene -iformat TSV -db {config[output_dir]}"
+        "{region_annotator} -input {input} -gene -iformat TSV -db {config[output_dir]}"
 
 
 rule load_reference_data:
@@ -57,7 +60,7 @@ rule load_reference_data:
     output:
         touch(os.path.join(config["output_dir"], "load_reference_data.done"))
     shell:
-        "java -jar {region_annotator_jar} -input {input} -reference -iformat TSV -db {config[output_dir]}"
+        "{region_annotator} -input {input} -reference -iformat TSV -db {config[output_dir]}"
 
 
 rule annotate_regions:
@@ -68,4 +71,4 @@ rule annotate_regions:
     output:
         final_output
     shell:
-        "java -jar {region_annotator_jar} -input {input[0]} -output {output} -iformat TSV -db {config[output_dir]}"
+        "{region_annotator} -input {input[0]} -output {output} -iformat TSV -db {config[output_dir]}"

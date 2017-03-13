@@ -5,9 +5,10 @@ example tool.
 """
 
 import argparse as arg
+import os
 
-from bioinformatics.tools.region_annotator import RegionAnnotator
-from bioinformatics.tools.magma import Magma
+from bioinformatics.tools.region_annotator.region_annotator import RegionAnnotator
+from bioinformatics.tools.magma.magma import Magma
 
 
 def __main__():
@@ -30,10 +31,16 @@ def __main__():
 
     args = parser.parse_args()
 
+    config = dict(vars(args))
+
     if args.workflow == "magma":
-        magma.execute(execution_mode=args.mode, context=args.cluster_env, output_dir=)
+        magma.execute(execution_mode=args.mode,
+                      context=args.cluster_env,
+                      config=config)
     elif args.workflow == "region_annotator":
-        region_annotator.execute()
+        region_annotator.execute(execution_mode=args.mode,
+                                 context=args.cluster_env,
+                                 config=config)
 
 
 if __name__ == "__main__":

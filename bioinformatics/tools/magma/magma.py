@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import bioinformatics.Tool as Tool
+from bioinformatics.Tool import Tool
 from pkg_resources import resource_filename
 
 
@@ -36,7 +36,7 @@ class Magma(Tool):
         magma_parser.add_argument("--ref-gene-loc", action="store",
                                   dest="ref_gene_loc",
                                   default=resource_filename(
-                                      "bioinformatics.ricopili_magma",
+                                      "bioinformatics.tools.magma",
                                       "resources/magma_linux/reference_data/NCBI37.3.gene.loc"))
 
         Tool.__init__(
@@ -44,5 +44,4 @@ class Magma(Tool):
             snakefile=resource_filename(
                 "bioinformatics.tools.magma",
                 "magma.snakefile"),
-            config=None,
             log_handler=None)

@@ -1,23 +1,22 @@
 #!/usr/bin/env python
 
-import bioinformatics.Tool as Tool
+from bioinformatics.Tool import Tool
 from pkg_resources import resource_filename
 
 
 class RegionAnnotator(Tool):
 
-    def __init__(self, subparser, context):
+    def __init__(self, subparser):
 
         region_annotator_parser = subparser.add_parser(
             "region_annotator",
             help="https://github.com/ivankosmos/RegionAnnotator")
-        region_annotator_parser.add_argument("--daner", action="store", dest="daner")
+        region_annotator_parser.add_argument(
+            "--daner-clump", action="store",
+            dest="daner", help="The daner clump file output by ricopili common variant analysis.")
 
-        Tool.__init__(
-            self,
+        super().__init__(
             snakefile=resource_filename(
                 "bioinformatics.tools.region_annotator",
                 "region_annotator.snakefile"),
-            config=None,
-            context=context,
             log_handler=None)

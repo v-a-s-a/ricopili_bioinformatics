@@ -11,29 +11,29 @@ class Tool():
     A wrapped tool.
     """
 
-    def __init__(self, snakefile, config, log_handler):
+    def __init__(self, snakefile, log_handler):
         self.snakefile = snakefile
-        self.config = config
         self.log_handler = log_handler
 
-    def execute(self, execution_mode, context, output_dir):
+    def execute(self, execution_mode, context, config):
         """
         Execute the tool workflow
         """
+
+        if not os.path.exists(os.path.join(config["output_dir"], '.config')):
+            os.makedirs(os.path.join(config["output_dir"], '.config'))
+        config_file = os.path.join(config["output_dir"], ".config/config.yaml")
+        with open(config_file, 'w') as config_conn:
+            yaml.dump(config, config_conn, default_flow_style=True)
+
         base_api_call = {"snakefile": self.snakefile,
                          "log_handler": self.log_handler,
-                         "config": self.config,
+                         "config": config,
+                         "configfile": config_file,
                          "latency_wait": 60,
                          "cluster_config": resource_filename(
                              "bioinformatics.config",
-                             "cluster_config")}
-
-        # dump config in the output directory
-        if not os.path.exists(os.path.join(output_dir, '.config')):
-            os.makedirs(os.path.join(output_dir, '.config'))
-            config_file = os.path.join(output_dir, ".config/config.yaml")
-        with open(config_file, 'w') as config_conn:
-            yaml.dump(self.config, config_conn, default_flow_style=True)
+                             "cluster_config.yaml")}
 
         if execution_mode == "local":
             # API call is already appropriately set
